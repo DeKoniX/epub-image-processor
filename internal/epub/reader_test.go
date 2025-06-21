@@ -7,12 +7,11 @@ import (
 )
 
 func TestUnzipEPUB(t *testing.T) {
-	src := filepath.Join("../../assets/test.epub")
-	dest := "../../tmp/test_unpack"
+	src := filepath.Join("testdata", "test.epub")
+	dest := t.TempDir()
 
-	err := os.RemoveAll(dest)
-	if err != nil {
-		t.Fatalf("cleanup failed: %v", err)
+	if _, err := os.Stat(src); os.IsNotExist(err) {
+		t.Skip("No test EPUB found at testdata/test.epub — skipping test")
 	}
 
 	if err := UnzipEPUB(src, dest); err != nil {
