@@ -5,26 +5,44 @@ name: Go
 
 on:
   push:
-    branches: ["master"]
-  pull_request:
-    branches: ["master"]
+    tags:
+      - v*
 
 jobs:
-  build:
+  release:
+    name: Build and Upload Release
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: 1.24
 
-      - name: Install dependencies
-        run: go mod tidy
+      - name: Build binaries for multiple OS/ARCH
+        run: |
+          mkdir -p dist
 
-      - name: Build
-        run: go build -v -o epub-imgproc
+          GOOS=linux GOARCH=amd64 go build -o dist/epub-imgproc-linux-amd64
+          GOOS=darwin GOARCH=amd64 go build -o dist/epub-imgproc-darwin-amd64
+          GOOS=darwin GOARCH=arm64 go build -o dist/epub-imgproc-darwin-arm64
+          GOOS=windows GOARCH=amd64 go build -o dist/epub-imgproc-windows-amd64.exe
 
-      - name: Test
-        run: go test -v ./...
+      - name: Create archives
+        run: |
+          cd dist
+          zip epub-imgproc-linux-amd64.zip epub-imgproc-linux-amd64
+          zip epub-imgproc-darwin-amd64.zip epub-imgproc-darwin-amd64
+          zip epub-imgproc-darwin-arm64.zip epub-imgproc-darwin-arm64
+          zip epub-imgproc-windows-amd64.zip epub-imgproc-windows-amd64.exe
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
