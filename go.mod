@@ -1,6 +1,6 @@
 module github.com/dekonix/epub-image-processor
 
-go 1.24.4
+go 1.24
 
 require github.com/disintegration/imaging v1.6.2
 
